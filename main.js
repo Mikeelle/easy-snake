@@ -1,59 +1,117 @@
-const WIDTH =500
-const HEIGHT =500
-const STEP = 100
-window.addEventListener("load",function(){
-    const platno = document.getElementById("platno")
-    const ctx = platno.getContext('2d');
-    startGame(ctx)
-})
+const WIDTH = 20;
+const HEIGHT = 20;
+
+const RIGHT = 0;
+const DOWN = 1;
+const LEFT = 2;
+const UP = 3;
+
+let cavasWidth;
+let scale;
+let scoreDisplay;
+
+window.addEventListener("load", function() {
+  const platno = document.getElementById("platno");
+  scoreDisplay = document.getElementById("score");
+  canvasWidth = platno.getBoundingClientRect().width;
+  platno.setAttribute("height", canvasWidth);
+  scale = canvasWidth / WIDTH;
+  const ctx = platno.getContext("2d");
+  startGame(ctx);
+});
 
 const startGame = function(ctx) {
-    const had = [[0,0]]
-    let smer = 0
-    window.addEventListener("keyup", function(e){
-        switch(e.keyCode) {
-            case 40:
-                smer=1
-                break
-            case 37:
-                smer=2
-                break
-            case 39:
-                smer=0
-                break
-            case 38:
-                smer=3
-                break
-        }
-    })
-    const game = function(){
-        const hlava = had[0]
-        const novaHlava = vypocitejHlavu(smer, hlava)
-        had.push(novaHlava)
-        had.shift()
-        render(ctx, had)
-        setTimeout(game, 300)        
-    }
-    game()
-}
+  const had = [[0, 0]];
+  let fruit = spawnFruit();
+  let puvodniSmer = RIGHT;
+  let smer = RIGHT;
 
-const render = function(ctx, had) {
-    ctx.clearRect(0,0,WIDTH,HEIGHT)
-    had.forEach(function(clanek){
-        ctx.fillStyle = 'green'
-        ctx.fillRect(clanek[0]*STEP, clanek[1]*STEP, 100, 100)
-    })
-}
+  let tick = 200;
+  let score = 0;
+
+  window.addEventListener("keyup", function(e) {
+    smer = changeDirection(puvodniSmer, e.keyCode);
+  });
+  const game = function() {
+    //apdejt stavu hry
+    const hlava = had[had.length - 1];
+    const novaHlava = vypocitejHlavu(smer, hlava);
+    puvodniSmer = smer;
+
+    had.push(novaHlava);
+    //sežrání
+    if (novaHlava[0] === fruit[0] && novaHlava[1] === fruit[1]) {
+      fruit = spawnFruit();
+      scoreDisplay.innerText = ++score;
+      if (tick > 50) tick = tick - 10;
+    } else {
+      had.shift();
+    }
+
+    console.log(had.length);
+
+    //začátek rendru
+    render(ctx, had, fruit);
+    setTimeout(game, tick);
+  };
+  game();
+};
+
+const render = function(ctx, had, fruit) {
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, canvasWidth, canvasWidth);
+
+  ctx.fillStyle = "lightgreen";
+  ctx.fillRect(fruit[0] * scale, fruit[1] * scale, scale, scale);
+
+  had.forEach(function(clanek) {
+    ctx.fillStyle = "maroon";
+    ctx.fillRect(clanek[0] * scale, clanek[1] * scale, scale, scale);
+  });
+};
 
 const vypocitejHlavu = function(smer, puvodniHlava) {
-    const x = puvodniHlava[0]
-    const y = puvodniHlava[1]
-    switch(smer)  {
-        case 0: return [x + 1, y + 0]
-        case 1: return [x + 0, y + 1]
-        case 2: return [x - 1, y + 0]
-        case 3: return [x + 0, y - 1]
-        default: Error("neznamy smer")
-    }
-    
+  const x = puvodniHlava[0];
+  const y = puvodniHlava[1];
+  switch (smer) {
+    case RIGHT:
+      return [orez(x + 1), orez(y + 0)];
+    case DOWN:
+      return [orez(x + 0), orez(y + 1)];
+    case LEFT:
+      return [orez(x - 1), orez(y + 0)];
+    case UP:
+      return [orez(x + 0), orez(y - 1)];
+    default:
+      Error("neznamy smer");
+  }
+};
+
+const spawnFruit = function() {
+  return [getRandomInt(0, HEIGHT - 1), getRandomInt(0, WIDTH - 1)];
+};
+
+const changeDirection = function(smer, key) {
+  switch (key) {
+    case 40:
+      if (smer !== UP) return DOWN;
+    case 37:
+      if (smer !== RIGHT) return LEFT;
+    case 39:
+      if (smer !== LEFT) return RIGHT;
+    case 38:
+      if (smer !== DOWN) return UP;
+    default:
+      return smer;
+  }
+};
+
+const orez = function(x) {
+  if (x < 0) return 0;
+  if (x > WIDTH - 1) return WIDTH - 1;
+  return x;
+};
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }

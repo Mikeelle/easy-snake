@@ -2,9 +2,26 @@
 <html>
     <head>
         <title>Title of the document</title>
+        <style>
+         body {
+           background: #ccc;
+         }
+         #score {
+           text-align: center;
+         }
+         .container {
+           display: flex;
+           justify-content: center;
+         }
+        </style>
     </head>
     <body>
-        <canvas width="500" height="500" id="platno">
+      <div id="score">
+        0
+      </div>
+      <div class="container">
+        <canvas id="platno">
+      </div>
         <script src="main.js"></script>
     </body>
 </html>
